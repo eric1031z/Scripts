@@ -1,0 +1,130 @@
+/*
+	Nella - Hidden Street : 1st Accompaniment
+*/
+var status;
+
+function start() {
+    status = -1;
+    action(1, 0, 0);
+}
+
+function action(mode, type, selection) {
+    if (mode == 0 && status == 0) {
+        cm.dispose();
+        return;
+    } else {
+        if (mode == 1)
+            status++;
+        else
+            status--;
+        var mapId = cm.getMapId();
+        if (mapId == 910340000) {
+            cm.warp(910340700, 0);
+            cm.removeAll(4001007);
+            cm.removeAll(4001008);
+            cm.dispose();
+        } else {
+            var outText;
+            if (mapId == 910340600) {
+                outText = "你們要離開了嗎？";
+            } else {
+                outText = "一旦離開此地圖，如果要再次嘗試，就要重新挑戰，你真的要離開嗎？";
+            }
+            if (status == 0) {
+                cm.sendYesNo(outText);
+            } else if (mode == 1) {
+                cm.warp(910340000, "st00"); // Warp player
+				cm.removeAll(4001007);
+				cm.removeAll(4001008);
+				//getPrize();
+                cm.dispose();
+            }
+        }
+    }
+}
+
+
+
+function getPrize(){
+	
+	var msg = "";
+	var today = new Date();
+    var todayp = (today.getMonth()+1) + "/" + today.getDate(); 
+	var logname = cm.getPQName("KerningPQ") + "" + todayp;
+	var name = cm.getPQName("KerningPQ");
+	var mpoint = cm.getPQPara(name,"mpoint");
+	var mcap = cm.getPQPara(name,"mpointcap");
+	var gash = cm.getPQPara(name,"gash");
+	var gcap = cm.getPQPara(name,"gashcap");
+	var point = cm.getPQPara(name,"point");
+	var pcap = cm.getPQPara(name,"pointcap");
+	var item1 = cm.getPQPara(name,"item1");
+	var citem1 = cm.getPQPara(name,"item1count");
+	var item2 = cm.getPQPara(name,"item2");
+	var citem2 = cm.getPQPara(name,"item2count");
+	var item3 = cm.getPQPara(name,"item3");
+	var citem3 = cm.getPQPara(name,"item3count");
+	var party = 0;
+	var low = cm.getPQPara(name, "lvlow");
+	var high = cm.getPQPara(name, "lvcap");
+	var bonus = 0;
+	var bb = false;
+	
+	if(cm.getPQPoints(logname,"mpoint") >= mcap){
+	   mpoint = 0;
+	}
+	
+	if(cm.getPQPoints(logname,"gash") >= gcap){
+	   gash = 0;
+	}
+	
+	if(cm.getPQPoints(logname,"point") >= pcap){
+	   point = 0;
+	}
+	
+	if(cm.getPlayer().getLevel() >= low && cm.getPlayer().getLevel() <= high){
+	   party = cm.getPQPara(name, "partybonus");;  
+	   bb = true;
+	}
+	
+	cm.getPlayer().modifyCSPoints(1,parseInt(mpoint*(100+party)/100),true);
+	cm.getPlayer().modifyCSPoints(0,parseInt(gash*(100+party)/100),true);
+	cm.getPlayer().setPoints(cm.getPlayer().getPoints() + parseInt(point*(100+party)/100));
+	cm.gainItem(item1,citem1);
+	cm.gainItem(item2,citem2);
+	cm.gainItem(item3,citem3);
+	
+	cm.setPQLog(name,logname,parseInt(mpoint*(100+party)/100),parseInt(gash*(100+party)/100),parseInt(point*(100+party)/100));
+	
+	msg += "#d---------------#k#r" + name + "組隊結算#k#d---------------#k\r\n";
+    msg += "#b日期 :#k #r" + todayp + "#k\r\n";
+	msg += "#b是否符合加成 :#k #r" + bb + " #k\r\n";
+    msg += "#b今日完成次數 :#k #r" + cm.getPQLog(logname) + "#k\r\n";
+	msg += "#b此場獲得點數(楓點/GASH/紅利) :#k #r" + "(" + parseInt(mpoint*(100+party)/100) + "/" + parseInt(gash*(100+party)/100) + "/" + parseInt(point*(100+party)/100) + ")#k \r\n";
+    msg += "#b今日獲取點數(楓點/GASH/紅利) :#k #r" + "(" + cm.getPQPoints(logname,"mpoint") + "/" + cm.getPQPoints(logname,"gash") + "/" + cm.getPQPoints(logname,"point") + ")#k \r\n";
+	var canm = 0;
+	var cang = 0;
+	var canp = 0;
+	if((mcap - cm.getPQPoints(logname,"mpoint")) > 0){
+		canm = (mcap - cm.getPQPoints(logname,"mpoint"));
+	}
+	if((gcap - cm.getPQPoints(logname,"gash")) > 0){
+		cang = (gcap - cm.getPQPoints(logname,"gash"));
+	}
+	if((pcap - cm.getPQPoints(logname,"point")) > 0){
+		canp = (pcap - cm.getPQPoints(logname,"point"));
+	}
+	msg += "#b尚可獲取點數(楓點/GASH/紅利) :#k #r" + "(" + canm + "/" + cang + "/" + canp + ")#k \r\n";
+	if(item1 != 0){
+        msg += "#b獲得道具一 :#k #d#i" + item1 	+ "# #t" + item1 + "# 共#k#r" + citem1 + "#d個#k\r\n";
+	}
+	
+	if(item2 != 0){
+        msg += "#b獲得道具二 :#k #d#i" + item2 	+ "# #t" + item2 + "# 共#k#r" + citem2 + "#d個#k\r\n";
+	}
+	
+	if(item3 != 0){
+        msg += "#b獲得道具三 :#k #d#i" + item3	+ "# #t" + item3 + "# 共#k#r" + citem3 + "#d個#k\r\n";
+	}
+	cm.sendOk(msg);
+}
